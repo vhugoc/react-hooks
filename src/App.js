@@ -1,25 +1,58 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from 'react';
+import './style.css';
 
 function App() {
+
+  const [repositories, setRepositories] = useState([]);
+  const [user, setUser] = useState();
+
+  async function fetchRepositories(user) {
+    const response = await fetch(`https://api.github.com/users/${user}/repos`);
+    const data = await response.json();
+    data.length ? setRepositories(data) : alert("Este usuário não existe");
+  }
+
+  useEffect(() => {
+    const filtered = repositories.filter(repo => repo.favorite);
+    document.title = `Você tem ${filtered.length} favoritos`;
+  }, [repositories]);
+
+  function handleKeyDown(e) {
+    if (e.which === 13) {
+      fetchRepositories(user);
+    }
+  }
+
+  function handleFavorite(id) {
+    const newRepositories = repositories.map(repo => {
+      return repo.id === id ? { ...repo, favorite: !repo.favorite } : repo;
+    });
+    setRepositories(newRepositories);
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      <div className="repositories-list">
+        <div className="search-container">
+          <input
+            type="text"
+            placeholder="Pesquisar usuário"
+            onChange={event => setUser(event.target.value)}
+            onKeyDown= { handleKeyDown }
+          ></input>
+        </div>
+        <ul>
+          {repositories.map(repo => (
+            <li key={repo.id} onClick={() => handleFavorite(repo.id)}>
+              <span>
+                {repo.favorite && <span className="favorite">{repo.name}</span>}
+                {!repo.favorite && <span>{repo.name}</span>}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </>
   );
 }
 
